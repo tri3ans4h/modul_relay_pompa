@@ -1,8 +1,14 @@
 #include <SoftwareSerial.h>
 
 SoftwareSerial espSerial(10, 11); // RX, TX
+//list command
+//command=relay     -> get value relay, HIGH | LOW
+//command=volume    -> get volume , in liter / cm3
+//command=relayoff  -> set relay LOW
+//command=relayon   -> set relay HIGH
 
-
+//from other source
+//command=sensor&value=23         -> read sensor  from remote
 #define ASCII_0 48
 #define ESP8266 espSerial
 #define RELAY 4
@@ -123,18 +129,35 @@ void loop(){
       
      // sendHTTPResponse(connectionId, strHTML);
      
-     String sensor = getCommand();
-     
-     Serial.println(sensor);
-     //hitung volume
-     //beri kondisi
-     float vol = calcVolume(float(sensor));
-     //jika volume =1,5 liter matikan relay
-     if(vol >=1500){
-       digitalWrite(RELAY,LOW);
-     }else{
+     String command = getCommand();
+     if(command == "sensor"){
+          int sensor = getValue();
+          Serial.println(sensor);
+         //hitung volume
+         //beri kondisi
+         float vol = calcVolume(sensor);
+         //jika volume =1,5 liter matikan relay
+         if(vol >=1500){
+           digitalWrite(RELAY,LOW);
+         }else{
+           digitalWrite(RELAY,HIGH);
+         }
+       
+     }else if(command=="relay")
+        strHTML = "status:"+RELAY;
+       sendResponse(connectionId, strHTML);
+     }else if(command="relayon"){
        digitalWrite(RELAY,HIGH);
+       strHTML = "status:"+RELAY;
+       sendResponse(connectionId, strHTML);
+       
+     }else if(command=="relayoff"){
+        digitalWrite(RELAY,LOW);
+       strHTML = "status:"+RELAY;
+       sendResponse(connectionId, strHTML);
+       
      }
+     
      
       //Close TCP/UDP
       String cmdCIPCLOSE = "AT+CIPCLOSE="; 
@@ -160,6 +183,43 @@ void loop(){
   delay(5000);
 }
 //getCommand , temukan perintah +IPD,0,200:command=sensor
+int getValue(){
+    bool haveValue = false;
+    int valueStartPos = 0;
+    char value[20];
+    for (int i=0; i<strlen(buffer); i++)
+    {
+    if (!haveValue) // just get the first occurrence of name
+      {
+        if (  (buffer[i]=='v') && 
+              (buffer[i+1]=='a') && 
+              (buffer[i+2]=='l') && 
+              (buffer[i+3]=='u')  && 
+              (buffer[i+4]=='e') && 
+              (buffer[i+5]=='=')) 
+        {  
+          haveCommand = true;
+          valueStartPos = i+6;
+          }
+      }
+         if (haveValue)
+       {
+          int tempPos = 0;
+          bool finishedCopying = false;
+            for (int i=valueStartPos; i<strlen(buffer); i++)
+              {
+                if ( (buffer[i]==' ') && !finishedCopying )  { finishedCopying = true;   } 
+                if ( !finishedCopying )                     { value[tempPos] = buffer[i];   tempPos++; }
+                }    
+                value[tempPos] = 0;
+         
+       }
+       
+      
+    }
+    return value;
+}
+
 String getCommand(){
     bool haveCommand = false;
     int commandStartPos = 0;
@@ -168,18 +228,20 @@ String getCommand(){
     {
     if (!haveCommand) // just get the first occurrence of name
       {
+        //cek jika ada perintah sensor=?
         if (  (buffer[i]=='s') && 
               (buffer[i+1]=='e') && 
               (buffer[i+2]=='n') && 
               (buffer[i+3]=='s')  && 
               (buffer[i+4]=='o') && 
               (buffer[i+5]=='r') && 
-              (buffer[i+5]=='=')) 
+              (buffer[i+6]=='=')) 
         {  
           haveCommand = true;
-          commandStartPos = i+6;
+          commandStartPos = i+7;
           }
-       }
+        
+      }
  
        if (haveCommand)
        {
