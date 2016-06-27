@@ -141,14 +141,11 @@ void loop()
             // sendHTTPResponse(connectionId, strHTML);
 
             String command = getCommand();
-            if(command == "sensor")
+            if(command == "sensor") //command=sensor
             {
                 int sensor = getValue();
                 Serial.println(sensor);
-                //hitung volume
-                //beri kondisi
                 float vol = calcVolume(sensor);
-                //jika volume =1,5 liter matikan relay
                 if(vol >=1500)
                 {
                     digitalWrite(RELAY,LOW);
@@ -157,55 +154,51 @@ void loop()
                 {
                     digitalWrite(RELAY,HIGH);
                 }
-
             }
-            else if(command=="relay")
+            else if(command=="relay") //req -> command=relay
+            {                         //resp -> command=relay&value=1/0    
                 strHTML = "command=relay&value="+RELAY;
-            sendResponse(connectionId, strHTML);
+                sendResponse(connectionId, strHTML);
+            }
+            else if(command="relayon")  //req -> command=relayon
+            {                           //resp -> command=relayon&value=1/0    
+                digitalWrite(RELAY,HIGH);
+                strHTML = "command=relayon&value="+RELAY;
+                sendResponse(connectionId, strHTML);
+            }
+            else if(command=="relayoff")//req -> command=relayon
+            {                           //resp -> command=relayon&value=1/0    
+                digitalWrite(RELAY,LOW);
+                strHTML = "command=relayoff&value="+RELAY;
+                sendResponse(connectionId, strHTML);
+            }
+            //Close TCP/UDP
+            String cmdCIPCLOSE = "AT+CIPCLOSE=";
+            cmdCIPCLOSE += connectionId;
+            sendESP8266Cmdln(cmdCIPCLOSE, 1000);
         }
-        else if(command="relayon")
-        {
-            digitalWrite(RELAY,HIGH);
-            strHTML = "command=relay&value="+RELAY;
-            sendResponse(connectionId, strHTML);
-
-        }
-        else if(command=="relayoff")
-        {
-            digitalWrite(RELAY,LOW);
-            strHTML = "command=relay&value="+RELAY;
-            sendResponse(connectionId, strHTML);
-
-        }
-
-
-        //Close TCP/UDP
-        String cmdCIPCLOSE = "AT+CIPCLOSE=";
-        cmdCIPCLOSE += connectionId;
-        sendESP8266Cmdln(cmdCIPCLOSE, 1000);
     }
-}
 
 
 
-static unsigned long start = millis();
-if (millis()-start >= wait_ms)
-{
-    start += wait_ms;
     //kirim request command=sensor tiap interval 5 detik
-    String cmd = "";
-    String send_data = "command=sensor";
-    clearESP8266SerialBuffer();
-    cmd = "AT+CIPSTART=\"TCP\",\"";
-    cmd += DEST_IP;
-    cmd += "\",80";
+    static unsigned long start = millis();
+    if (millis()-start >= wait_ms)
+    {
+        start += wait_ms;
+        String cmd = "";
+        String send_data = "command=sensor";
+        clearESP8266SerialBuffer();
+        cmd = "AT+CIPSTART=\"TCP\",\"";
+        cmd += DEST_IP;
+        cmd += "\",80";
 
-    sendESP8266Cmdln(cmd,1000);
-    cmd = "AT+CIPSEND=";
-    cmd += send_data.length();
-    sendESP8266Cmdln(cmd, 1000);
-    sendESP8266Data(send_data, 1000);
-}
+        sendESP8266Cmdln(cmd,1000);
+        cmd = "AT+CIPSEND=";
+        cmd += send_data.length();
+        sendESP8266Cmdln(cmd, 1000);
+        sendESP8266Data(send_data, 1000);
+    }
 
 }
 //getCommand , temukan perintah +IPD,0,200:command=sensor
