@@ -15,20 +15,11 @@ SoftwareSerial espSerial(10, 11); // RX, TX
 #define DST_IP "192.168.43.69"
 String SSID = "TestAP";
 String PASSWORD = "12345678";
-unsigned long wait_ms = 5000UL;
 int LED = 13;
 
 boolean FAIL_8266 = false;
 
-String strHTML = "<!doctype html>\
-<html>\
-<head>\
-<title>arduino-er</title>\
-</head>\
-<body>\
-<H1>arduino-er.blogspot.com</H1>\
-</body>\
-</html>";
+String strHTML = "";
 
 #define BUFFER_SIZE 128
 char buffer[BUFFER_SIZE];
@@ -110,16 +101,6 @@ void setup()
     digitalWrite(LED, HIGH);
 }
 
-float calcVolume(float sensor_value)
-{
-    float total_tinggi  =150;
-    float r  =50;
-    float tinggi = total_tinggi - sensor_value;
-
-    float vol = 3.14 * r * r * tinggi;
-
-    return vol;
-}
 
 void loop()
 {
@@ -141,21 +122,7 @@ void loop()
             // sendHTTPResponse(connectionId, strHTML);
 
             String command = getCommand();
-            if(command == "sensor") //command=sensor
-            {
-                int sensor = getValue();
-                Serial.println(sensor);
-                float vol = calcVolume(sensor);
-                if(vol >=1500)
-                {
-                    digitalWrite(RELAY,LOW);
-                }
-                else
-                {
-                    digitalWrite(RELAY,HIGH);
-                }
-            }
-            else if(command=="relay") //req -> command=relay
+            if(command=="relay") //req -> command=relay
             {                         //resp -> command=relay&value=1/0    
                 strHTML = "command=relay&value="+RELAY;
                 sendResponse(connectionId, strHTML);
@@ -178,28 +145,6 @@ void loop()
             sendESP8266Cmdln(cmdCIPCLOSE, 1000);
         }
     }
-
-
-
-    //kirim request command=sensor tiap interval 5 detik
-    static unsigned long start = millis();
-    if (millis()-start >= wait_ms)
-    {
-        start += wait_ms;
-        String cmd = "";
-        String send_data = "command=sensor";
-        clearESP8266SerialBuffer();
-        cmd = "AT+CIPSTART=\"TCP\",\"";
-        cmd += DEST_IP;
-        cmd += "\",80";
-
-        sendESP8266Cmdln(cmd,1000);
-        cmd = "AT+CIPSEND=";
-        cmd += send_data.length();
-        sendESP8266Cmdln(cmd, 1000);
-        sendESP8266Data(send_data, 1000);
-    }
-
 }
 //getCommand , temukan perintah +IPD,0,200:command=sensor
 int getValue()
@@ -257,13 +202,14 @@ String getCommand()
         if (!haveCommand) // just get the first occurrence of name
         {
             //cek jika ada perintah sensor=?
-            if (  (buffer[i]=='s') &&
-                    (buffer[i+1]=='e') &&
-                    (buffer[i+2]=='n') &&
-                    (buffer[i+3]=='s')  &&
-                    (buffer[i+4]=='o') &&
-                    (buffer[i+5]=='r') &&
-                    (buffer[i+6]=='='))
+            if (  (buffer[i]=='c') &&
+                    (buffer[i+1]=='o') &&
+                    (buffer[i+2]=='m') &&
+                    (buffer[i+3]=='m')  &&
+                    (buffer[i+4]=='a') &&
+                    (buffer[i+5]=='n') &&
+                    (buffer[i+6]=='d') &&
+                    (buffer[i+7]=='='))
             {
                 haveCommand = true;
                 commandStartPos = i+7;
@@ -309,28 +255,6 @@ void sendResponse(int id, String content)
     sendESP8266Data(response, 1000);
 }
 
-void sendHTTPResponse(int id, String content)
-{
-    String response;
-    response = "HTTP/1.1 200 OK\r\n";
-    response += "Content-Type: text/html; charset=UTF-8\r\n";
-    response += "Content-Length: ";
-    response += content.length();
-    response += "\r\n";
-    response +="Connection: close\r\n\r\n";
-    response += content;
-
-    String cmd = "AT+CIPSEND=";
-    cmd += id;
-    cmd += ",";
-    cmd += response.length();
-
-    Serial.println("--- AT+CIPSEND ---");
-    sendESP8266Cmdln(cmd, 1000);
-
-    Serial.println("--- data ---");
-    sendESP8266Data(response, 1000);
-}
 
 boolean waitOKfromESP8266(int timeout)
 {
