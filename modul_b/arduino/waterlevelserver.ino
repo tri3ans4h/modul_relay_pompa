@@ -20,15 +20,7 @@ int LED = 13;
 
 boolean FAIL_8266 = false;
 
-String strHTML = "<!doctype html>\
-<html>\
-<head>\
-<title>arduino-er</title>\
-</head>\
-<body>\
-<H1>arduino-er.blogspot.com</H1>\
-</body>\
-</html>";
+String strHTML = "";
 
 #define BUFFER_SIZE 128
 char buffer[BUFFER_SIZE];
@@ -254,19 +246,20 @@ String getCommand()
     char command[20];
     for (int i=0; i<strlen(buffer); i++)
     {
-        if (!haveCommand) // just get the first occurrence of name
+        if (!haveCommand) 
         {
-            //cek jika ada perintah sensor=?
-            if (  (buffer[i]=='s') &&
-                    (buffer[i+1]=='e') &&
-                    (buffer[i+2]=='n') &&
-                    (buffer[i+3]=='s')  &&
-                    (buffer[i+4]=='o') &&
-                    (buffer[i+5]=='r') &&
-                    (buffer[i+6]=='='))
+            //cek jika ada perintah command=?
+            if (  (buffer[i]=='c') &&
+                    (buffer[i+1]=='o') &&
+                    (buffer[i+2]=='m') &&
+                    (buffer[i+3]=='m')  &&
+                    (buffer[i+4]=='a') &&
+                    (buffer[i+5]=='n') &&
+                    (buffer[i+6]=='d') &&
+                    (buffer[i+7]=='='))
             {
                 haveCommand = true;
-                commandStartPos = i+7;
+                commandStartPos = i+8;
             }
 
         }
@@ -288,11 +281,8 @@ String getCommand()
                 }
             }
             command[tempPos] = 0;
-
         }
-
     }
-
     return String(command);
 }
 void sendResponse(int id, String content)
