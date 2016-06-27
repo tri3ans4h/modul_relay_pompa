@@ -28,7 +28,24 @@ Rencana Software :
     - volume = 7857.14 x 50 = 392857.143 cm3 = 392.857143 liter
 
 
+Modifikasi Modul
+    - Untuk kendali lampu dengan memanfaatkan relay
+    - hilangkan fungsi calcVolume
+    
+Contoh :
 
+Request : command=relay
+Response : command=relay&value=1
+    
+Request : command=relayon
+Response : command=relayon&value=1
+
+Request : command=relayoff
+Response : command=relayoff&value=0
+
+secara interval mengirim perintah
+Request : command=sensor menuju modul sensor
+Response : command=sensor&value=10
       
 Credit :
 http://arduino-er.blogspot.co.id/2015/05/arduino-esp8266-web-server-ii.html
