@@ -48,5 +48,5 @@ Request : command=sensor menuju modul sensor
 Response : command=sensor&value=10
       
 Credit :
-http://arduino-er.blogspot.co.id/2015/05/arduino-esp8266-web-server-ii.html
-http://www.martyncurrey.com/arduino-esp8266-web-server/
+- http://arduino-er.blogspot.co.id/2015/05/arduino-esp8266-web-server-ii.html
+- http://www.martyncurrey.com/arduino-esp8266-web-server/
