@@ -7,6 +7,7 @@ Modul ini di gunakan pada sisi server
 Rencana Hardware:
 - arduino nano v3
 - esp8266 v01
+- LM2596 DC to DC step down
 - relay
 - Adaptor 5 volt
 
